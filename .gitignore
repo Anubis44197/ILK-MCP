@@ -1,0 +1,31 @@
+
+# Büyük dosya klasörleri
+Esoteric_Library_Downloads/
+Esoteric_Library/
+benım mcp/
+*.pdf
+*.zip
+*.epub
+
+# İndirilmiş ve İşlenmiş Veriler
+agrippa_*.md
+steganographia_*.md
+polygraphia_*.md
+polygraphia_*.txt
+ocr_test_result.md
+*.json
+
+# Hariç tut (Config dosyaları kalsın)
+!library_manifest.json
+!package.json
+
+# Python Çöpleri
+__pycache__/
+*.pyc
+venv/
+env/
+.env
+
+# Loglar
+*.log
+*.tmp
