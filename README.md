@@ -77,7 +77,72 @@ python indir.py
 
 ---
 
+---
+
+## 🔧 Son Güncellemeler & Düzeltmeler
+
+### 🐛 Problem & Çözüm (17 Aralık 2025)
+
+#### Karşılaşılan Sorun
+```
+❌ "URL veriğim herşeyi indiriyordu, şimdi yapmıyor"
+   - Ata E-Kitap gibi sitelerde indirme başarısız oluyordu
+   - Sistem pattern (/files/mobile/) buluyor ama 404 dönerken
+   - Gerçek e-kitap URL'si HTML'de gömülü idi
+```
+
+#### Çözüm: `extract_ebook_path()` Fonksiyonu
+**Dosya:** [indir.py](indir.py#L253-L283)
+
+```python
+async def extract_ebook_path(client, url):
+    """
+    Ata E-Kitap gibi sitelerden data-ebook-path özelliğini çıkar.
+    HTML'de gömülü olan gerçek e-kitap path'ini bulup
+    tam URL'ye dönüştürür.
+    """
+```
+
+**Nasıl Çalışıyor:**
+1. Verilen URL'nin HTML'ini indir
+2. `<a data-ebook-path="/e-books/...">` öğesini ara
+3. Path'i bulunca tam URL oluştur
+4. Flipbook indirmesinde bu URL'yi kullan
+
+**Entegrasyon:** [indir.py](indir.py#L376-L395)
+```python
+# E-Kitap path kontrolü
+ebook_path = await extract_ebook_path(client, flipbook_url)
+if ebook_path:
+    actual_url = ebook_path
+```
+
+#### Test Sonuçları
+✅ **Ata E-Kitap (7. Sınıf Fen Bilimleri Soru Bankası)**
+- 329 sayfa başarıyla indirildi
+- Pattern: `files/mobile/` tespit edildi
+- PDF oluşturuldu: 89.3 MB
+- Konum: `Desktop/Esoteric_Library/Flipbooks/Ata_E-Kitap_-_Fen_Bilimleri_Soru_Bankası/`
+
+#### Bonus: Manifest Protection Devre Dışı
+- `re-download` kısıtlaması kaldırıldı
+- Unlimited indirme imkanı sağlandı
+- [setup_final_environment.py](setup_final_environment.py#L247) ve [indir.py](indir.py#L355) düzeltildi
+
+#### Bilinən Sınırlamalar
+- ❌ **Gunay e-kitap**: JavaScript rendering gerekli (Selenium opsiyonel)
+- ⚠️ **Deep Spider**: Henüz test edilmedi (bilinmeyen sorun olabilir)
+
+---
+
 ## 📜 Sürüm Geçmişi
+
+### v5.7 - E-Kitap Path Extraction (Güncel)
+
+* **Dinamik URL Çözme:** Ata E-Kitap gibi sitelerde `data-ebook-path` özelliğini otomatik çıkartır.
+* **Akıllı Path Temizliği:** `index.html` ve parametreli URL'leri düzeltip tam path'i bulur.
+* **Universal Support:** Yeni tip flipbook siteleri için hazır altyapı.
+* **Test Edilmiş:** Ata E-Kitap ile 329 sayfalı kitap başarıyla indirildi.
 
 ### v5.6 - Universal Downloader (Evrensel Erişim)
 
