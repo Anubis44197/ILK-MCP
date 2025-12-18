@@ -279,6 +279,94 @@ async def extract_ebook_path(client, url):
     except:
         return None
 
+# --- FLIPHTML5 (FARKLI YAP) İNDİRİCİ ---
+def detect_fliphtml5(url):
+    """Fliphtml5 linki mi kontrol et"""
+    return "fliphtml5.com" in url.lower() or "fliphtm" in url.lower()
+
+async def download_fliphtml5_book(client, base_url, target_dir, title):
+    """Fliphtml5 kitabını sayfalar halinde indir ve PDF'ye çevir"""
+    print(f"\n{C_BLUE}📚 Fliphtml5 Modu Aktif: Config aranıyor...{C_RESET}")
+    
+    # URL'den fragment kaldır (# ve sonrası)
+    base_url_clean = base_url.split("#")[0] if "#" in base_url else base_url
+    
+    try:
+        # Config.js'i al
+        config_url = f"{base_url_clean.rstrip('/')}/javascript/config.js"
+        config_resp = await client.get(config_url, timeout=10)
+        
+        if config_resp.status_code != 200:
+            print(f"{C_WARN}⚠️  Config alınamadı ({config_resp.status_code}){C_RESET}")
+            return []
+        
+        # JSON parse et
+        import re
+        match = re.search(r'var htmlConfig = (\{.*?\});', config_resp.text, re.DOTALL)
+        if not match:
+            print(f"{C_WARN}⚠️  Config parse hatası{C_RESET}")
+            return []
+        
+        config = json.loads(match.group(1))
+        pages = config.get("fliphtml5_pages", [])
+        page_count = config.get("meta", {}).get("pageCount", len(pages))
+        
+        if page_count == 0:
+            print(f"{C_WARN}⚠️  Sayfa bulunamadı{C_RESET}")
+            return []
+        
+        print(f"      ✅ {page_count} sayfa bulundu")
+        print("      📥 Sayfalar indiriliyor...")
+        
+        # Sayfaları indir
+        downloaded_pages = []
+        consecutive_errors = 0
+        
+        for idx, page_info in enumerate(pages, 1):
+            try:
+                # Rate limiting (her 20 sayfa sonra bekleme)
+                if idx % 20 == 0:
+                    await asyncio.sleep(1)
+                
+                page_filename = page_info['n'][0]
+                page_url = f"{base_url_clean.rstrip('/')}/files/large/{page_filename}"
+                
+                resp = await client.get(page_url, timeout=15)
+                
+                if resp.status_code != 200:
+                    consecutive_errors += 1
+                    if consecutive_errors > 5:
+                        print(f"         ⚠️  Ardışık 5 hata, durduriliyor")
+                        break
+                    continue
+                
+                consecutive_errors = 0
+                
+                # Dosyayı kaydet
+                fname = f"{idx:04d}.webp"
+                fpath = os.path.join(target_dir, fname)
+                with open(fpath, "wb") as f:
+                    f.write(resp.content)
+                
+                downloaded_pages.append(fpath)
+                
+                # Progress göster
+                if idx % 20 == 0 or idx == 1 or idx == page_count:
+                    pct = (idx / page_count) * 100
+                    print(f"         Sayfa {idx}/{page_count} ({pct:.0f}%)", end="\r")
+                
+            except asyncio.TimeoutError:
+                consecutive_errors += 1
+            except Exception as e:
+                consecutive_errors += 1
+        
+        print(f"\n      ✅ Toplam {len(downloaded_pages)} sayfa indirildi")
+        return downloaded_pages
+        
+    except Exception as e:
+        print(f"{C_FAIL}      ❌ Fliphtml5 Hatası: {e}{C_RESET}")
+        return []
+
 # --- 2.5 FLIPBOOK (RESİM SERİSİ) İNDİRİCİ ---
 async def download_flipbook_images(client, base_url, target_dir, title):
     print(f"\n{C_BLUE}📚 Flipbook Modu Aktif: Resim serisi taranıyor...{C_RESET}")
@@ -373,7 +461,25 @@ async def download_worker_full(items, folder_name_raw, is_flipbook=False, flipbo
         
         async with httpx.AsyncClient(headers={"User-Agent": USER_AGENT}, verify=False, timeout=60, follow_redirects=True) as client:
             if flipbook_url:
-                # 0. E-Kitap Path Kontrolü (Ata E-Kitap vs.)
+                # 0. Fliphtml5 Algılaması (Özel Handler)
+                if detect_fliphtml5(flipbook_url):
+                    print("      🌐 Tür: Fliphtml5 - Özel Handler Kullanılıyor...")
+                    downloaded = await download_fliphtml5_book(client, flipbook_url, target_dir, clean_folder_name)
+                    if downloaded:
+                        pdf_name = f"{clean_folder_name}.pdf"
+                        pdf_path = os.path.join(target_dir, pdf_name)
+                        if create_pdf_from_images(downloaded, pdf_path):
+                            # Temizlik
+                            for img in downloaded:
+                                try: os.remove(img)
+                                except: pass
+                            print("      🧹 Geçici dosyalar silindi.")
+                        return
+                    else:
+                        print(f"      ❌ Fliphtml5 sayfaları indirilemedi.")
+                        return
+
+                # 1. E-Kitap Path Kontrolü (Ata E-Kitap vs.)
                 print("      🔍 E-Kitap kaynağı kontrol ediliyor...")
                 actual_url = flipbook_url
                 ebook_path = await extract_ebook_path(client, flipbook_url)
@@ -381,7 +487,7 @@ async def download_worker_full(items, folder_name_raw, is_flipbook=False, flipbo
                     print(f"      ✅ E-Kitap yolu bulundu, güncellenmiş URL kullanılıyor")
                     actual_url = ebook_path
                 
-                # 1. Direkt PDF Kontrolü
+                # 2. Direkt PDF Kontrolü
                 if actual_url.lower().endswith(".pdf"):
                     print("      📕 Tür: Direkt PDF. İndiriliyor...")
                     try:
@@ -395,7 +501,7 @@ async def download_worker_full(items, folder_name_raw, is_flipbook=False, flipbo
                     except Exception as e: print(f"      ❌ Hata: {e}")
                     return
 
-                # 2. Resim Serisi (Flipbook) Olarak Tara (Yayıncı Farketmez)
+                # 3. Resim Serisi (Flipbook) Olarak Tara (Yayıncı Farketmez)
                 images = await download_flipbook_images(client, actual_url, target_dir, clean_folder_name)
                 if images:
                     pdf_name = f"{clean_folder_name}.pdf"
