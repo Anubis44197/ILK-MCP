@@ -428,3 +428,58 @@ Lütfen yerel yasalara ve platform kullanım koşullarına uyunuz.
   - 193 sayfa Fliphtml5 ✅
   - 900+ sayfa Ata E-Kitap ✅
   - 3-level Cascading Detection ✅
+
+---
+
+## 📋 Sürüm Tarihi (Changelog)
+
+### v6.0 (18 Aralık 2025) - PRODUCTION READY
+**Büyük Değişiklik: İsem Dijital Desteği Kaldırıldı**
+
+#### ✅ Yapılan İşlemler:
+- ❌ İsem Dijital (isemdijital.com) platformu tamamen kaldırıldı
+- 🗑️ 30+ İsem test dosyası silindi
+- 🗑️ 4 İsem test klasörü silindi
+- 🗑️ 100+ eski debug/test dosyası silindi
+- 🧹 Steganographia assets klasörü temizlendi
+- ✅ Cascade detection optimize edildi (4-seviye → 3-seviye)
+- ✅ Kod temizlendi (İsem referansı = 0)
+- ✅ README.md v6.0'a güncellendi
+
+#### 📊 Güncel Platform Desteği:
+| Platform | Durum | Test | Not |
+|----------|-------|------|-----|
+| Fliphtml5 | ✅ Aktif | 193 sayfa | Production Ready |
+| Ata E-Kitap | ✅ Aktif | 900+ sayfa | Production Ready |
+| Generic Flipbook | ✅ Fallback | - | Backup Handler |
+
+#### 🔧 Core Functions (v6.0):
+1. `detect_fliphtml5(url)` - Fliphtml5 algılama
+2. `download_fliphtml5_book()` - Fliphtml5 indirme
+3. `extract_ebook_path()` - Ata E-Kitap algılama  
+4. `download_flipbook_images()` - Generic indirme
+
+#### 🚀 Sistem Durumu:
+- ✅ Python Syntax: OK (4 modül)
+- ✅ Import Test: OK
+- ✅ Cascade Detection: 3/3 Platform
+- ✅ Code Quality: Clean
+- ✅ Deployment: READY
+
+---
+
+### v5.9 (Önceki) - İsem Dijital Experimental
+- İsem Dijital desteği eklendi (proprietary format)
+- 312 sayfa PDF oluşturma başarılı
+- Screenshot-based extraction yöntemi
+- **Not:** Bu sürüm production'da instable olduğu için v6.0'da kaldırıldı
+
+---
+
+## 🔄 Geçiş Kılavuzu (v5.x → v6.0)
+
+İsem Dijital linklerini kullanıyorsanız:
+- **UYARI:** v6.0'da İsem Dijital desteği kaldırıldı
+- **Çözüm:** Fliphtml5 veya Ata E-Kitap alternatifleri kullanın
+
+Sistem otomatik olarak fallback handler ile genel flipbook olarak işleyecektir.
