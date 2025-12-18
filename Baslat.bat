@@ -1,4 +1,4 @@
 @echo off
-cd /d "c:\Users\90535\.gemini\antigravity\scratch"
-python menu.py
+rem cd /d "c:\Users\90535\.gemini\antigravity\scratch"
+".venv\Scripts\python.exe" menu.py
 pause

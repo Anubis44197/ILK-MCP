@@ -10,7 +10,7 @@ C_BLUE = "\033[94m"
 C_GREEN = "\033[92m"
 C_RESET = "\033[0m"
 
-SCRATCH_DIR = r"c:\Users\90535\.gemini\antigravity\scratch"
+SCRATCH_DIR = os.path.dirname(os.path.abspath(__file__))
 PYTHON_EXE = sys.executable
 
 def clear():

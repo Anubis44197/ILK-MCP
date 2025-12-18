@@ -483,3 +483,20 @@ Lütfen yerel yasalara ve platform kullanım koşullarına uyunuz.
 - **Çözüm:** Fliphtml5 veya Ata E-Kitap alternatifleri kullanın
 
 Sistem otomatik olarak fallback handler ile genel flipbook olarak işleyecektir.
+
+---
+
+### v6.1 (18 Aralık 2025) - PORTABILITY & WINDOWS SUPPORT
+**Windows üzerinde kolay kurulum ve çalışma için iyileştirmeler yapıldı.**
+
+#### ✅ Yapılan İyileştirmeler:
+- **Otomatik Dizin Algılama:** `menu.py` artık hardcoded (sabit) dosya yolları yerine, çalıştığı dizini otomatik olarak algılıyor. Bu sayede uygulama Masaüstü veya herhangi bir klasörden sorunsuz çalıştırılabilir.
+- **Sanal Ortam Entegrasyonu:** `Baslat.bat`, sistem genelindeki Python yerine doğrudan proje içindeki `.venv` sanal ortamını kullanacak şekilde güncellendi.
+- **Kolay Başlatma:** Masaüstü kısayolu oluşturma desteği eklendi.
+- **Bağımlılıklar:** `requirements.txt` üzerinden eksik kütüphanelerin (httpx, beautifulsoup4, pillow) otomatik yüklenmesi desteklendi.
+
+#### 🔧 Nasıl Güncellenir?
+Eğer eski bir sürümden geliyorsanız:
+1. Projeyi son sürüme çekin (`git pull`).
+2. `.venv` klasörü varsa, `Baslat.bat` dosyasını çalıştırın; gerekli ayarlar otomatik yapılacaktır.
+
