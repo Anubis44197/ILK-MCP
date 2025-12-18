@@ -433,12 +433,22 @@ def create_pdf_from_images(image_paths, output_pdf_path):
     print(f"      📚 PDF Ciltleniyor... ({len(image_paths)} sayfa)")
     try:
         images = []
+        valid_count = 0
         for p in image_paths:
-            img = Image.open(p)
-            if img.mode != 'RGB': img = img.convert('RGB')
-            images.append(img)
+            # Boş dosyaları atla
+            if not os.path.exists(p) or os.path.getsize(p) == 0:
+                continue
+            try:
+                img = Image.open(p)
+                if img.mode != 'RGB': img = img.convert('RGB')
+                images.append(img)
+                valid_count += 1
+            except Exception as img_err:
+                print(f"      ⚠️  Sayfa atlandı ({os.path.basename(p)}): {img_err}")
+                continue
             
         if images:
+            print(f"      ✅ Geçerli sayfalar: {valid_count}/{len(image_paths)}")
             images[0].save(output_pdf_path, "PDF", resolution=100.0, save_all=True, append_images=images[1:])
             print(f"      ✨ PDF Hazır: {os.path.basename(output_pdf_path)}")
             return True
